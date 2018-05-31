@@ -1,8 +1,40 @@
 <?php
 
+use Phalcon\Loader;
 use Phalcon\Mvc\Micro;
+use Phalcon\Di\FactoryDefault;
+use Phalcon\Db\Adapter\Pdo\Mysql as PdoMysql;
 
-$app = new Micro();
+// Use Loader() to autoload our model
+$loader = new Loader();
+
+$loader->registerNamespaces(
+    [
+        'Store\Toys' => __DIR__ . '/models'
+    ]
+);
+
+$loader->register();
+
+$di = new FactoryDefault();
+
+// Set up the database service
+$di->set(
+    'db',
+    function() {
+        return new PdoMysql(
+            [
+                'host' => '127.0.0.1',
+                'username' => 'root',
+                'password' => '',
+                'dbname' => 'phalcon_basic'
+            ]
+        );
+    }
+);
+
+// Create and bind the DI to the application
+$app = new Micro($di);
 
 // Retrieves all robots
 $app->get(
@@ -48,7 +80,7 @@ $app->put(
 $app->delete(
     '/api/robots/{id:[0-9]+}',
     function($id) {
-        
+
     }
 );
 
