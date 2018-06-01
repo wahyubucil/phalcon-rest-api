@@ -4,6 +4,7 @@ use Phalcon\Loader;
 use Phalcon\Mvc\Micro;
 use Phalcon\Di\FactoryDefault;
 use Phalcon\Db\Adapter\Pdo\Mysql as PdoMysql;
+use Phalcon\Http\Response;
 
 // Use Loader() to autoload our model
 $loader = new Loader();
@@ -86,8 +87,38 @@ $app->get(
 // Retrieves robots based on primary key
 $app->get(
     '/api/robots/{id:[0-9]+}',
-    function($id) {
+    function($id) use ($app) {
+        $phql = 'SELECT * FROM Store\Toys\Robots WHERE id = :id:';
 
+        $robot = $app->modelsManager->executeQuery(
+            $phql,
+            [
+                'id' => $id
+            ]
+        )->getFirst();
+
+        // Create a response
+        $response = new Response();
+
+        if ($robot == false) {
+            $response->setJsonContent(
+                [
+                    'status' => 'NOT-FOUND'
+                ]
+            );
+        } else {
+            $response->setJsonContent(
+                [
+                    'status' => 'FOUND',
+                    'data' => [
+                        'id' => $robot->id,
+                        'name' => $robot->name
+                    ]
+                ]
+            );
+        }
+
+        return $response;
     }
 );
 
