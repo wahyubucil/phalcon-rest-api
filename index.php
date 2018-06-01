@@ -39,8 +39,21 @@ $app = new Micro($di);
 // Retrieves all robots
 $app->get(
     '/api/robots',
-    function() {
+    function() use ($app) {
+        $phql = 'SELECT * FROM Store\Toys\Robots ORDER BY name';
 
+        $robots = $app->modelsManager->executeQuery($phql);
+
+        $data = [];
+
+        foreach ($robots as $robot) {
+            $data[] = [
+                'id' => $robot->id,
+                'name' => $robot->name
+            ];
+        }
+
+        echo json_encode($data);
     }
 );
 
