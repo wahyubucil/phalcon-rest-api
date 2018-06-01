@@ -227,8 +227,40 @@ $app->put(
 // Deletes robots based on primary key
 $app->delete(
     '/api/robots/{id:[0-9]+}',
-    function($id) {
+    function($id) use ($app) {
+        $phql = 'DELETE FROM Store\Toys\Robots WHERE id = :id:';
 
+        $status = $app->modelsManager->executeQuery(
+            $phql,
+            [
+                'id' => $id
+            ]
+        );
+
+        // Create a response
+        $response = new Response();
+
+        if ($status->success() === true) {
+            $response->setJsonContent([
+                'status' => 'OK'
+            ]);
+        } else {
+            // Change the HTTP status
+            $response->setStatusCode(409, 'Conflict');
+
+            $errors = [];
+
+            foreach ($status->getMessages() as $message) {
+                $errors[] = $message->getMessage();
+            }
+
+            $response->setJsonContent([
+                'status' => 'ERROR',
+                'messages' => $errors
+            ]);
+        }
+
+        return $response;
     }
 );
 
