@@ -125,8 +125,56 @@ $app->get(
 // Adds a new robot
 $app->post(
     '/api/robots',
-    function() {
+    function() use ($app) {
+        $robot = $app->request->getJsonRawBody();
 
+        $phql = 'INSERT INTO Store\Toys\Robots (name, type, year) VALUES(:name:, :type:, :year:)';
+
+        $status = $app->modelsManager->executeQuery(
+            $phql,
+            [
+                'name' => $robot->name,
+                'type' => $robot->type,
+                'year' => $robot->year
+            ]
+        );
+
+        // Create a response
+        $response = new Response();
+
+        // Check if the insertion was successful
+        if ($status->success() === true) {
+            // Change the HTTP status
+            $response->setStatusCode(201, 'Created');
+
+            $robot->id = $status->getModel()->id;
+
+            $response->setJsonContent(
+                [
+                    'status' => 'OK',
+                    'data' => $robot
+                ]
+            );
+        } else {
+            // Change the HTTP status
+            $response->setStatusCode(409, 'Conflict');
+
+            // Send errors to the client
+            $errors = [];
+
+            foreach ($status->getMessages() as $message) {
+                $errors[] = $message->getMessage();
+            }
+
+            $response->setJsonContent(
+                [
+                    'status' => 'ERROR',
+                    'messages' => $errors
+                ]
+            );
+        }
+
+        return $response;
     }
 );
 
